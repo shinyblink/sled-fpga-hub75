@@ -1,0 +1,28 @@
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///
+/// Top-Level Verilog Module
+///
+/// Only include pins the design is actually using.  Make sure that the pin is
+/// given the correct direction: input vs. output vs. inout
+///
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+module TinyFPGA_BX
+	(
+	 output pin_usbp,
+	 output pin_usbn,
+	 input 	pin_clk,
+	 output pin_13,
+
+	 );
+
+   reg [23:0] counter;
+   always @(posedge pin_clk) counter <= counter + 1;
+
+   assign pin_usbp = 1'b0;
+   assign pin_usbn = 1'b0;
+
+   assign pin_13 = counter[23];
+
+endmodule
