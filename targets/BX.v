@@ -9,8 +9,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+`default_nettype none
+
+`include "../src/pll.v"
 `include "../src/pixram.v"
-`include "../src/pixspi.v"
+`include "../src/spi.v"
 `include "../src/pixsyn.v"
 
 module TinyFPGA_BX
@@ -42,11 +45,14 @@ module TinyFPGA_BX
    // Clocking. ATTACH PLL HERE!
    // NOTE: ABSOLUTELY MUST be going at least twice as fast as SPI clock!
    //       Blame clock domains
-   wire the_actual_clock = pin_clk;
+   wire   clock;
+   wire   pll_locked;
+   pll our_pll(pin_clk, clock, pll_locked);
+
 
    // Pins, input
    wire pin_spi_clk = pin_1;
-   wire pin_spi_ss = pin_2;
+   wire pin_spi_cs = pin_2;
    wire pin_spi_mosi = pin_3;
    // Pins, output
    wire pin_hub_clk;
@@ -77,20 +83,43 @@ module TinyFPGA_BX
    assign pin_23 = pin_hub_d;
 
    wire ram_wclk;
-   wire [11:0] ram_waddr;
-   wire [31:0] ram_wdata;
+   wire [13:0] ram_waddr;
+   wire [7:0] ram_wdata;
    wire [11:0] ram_raddr;
    wire [15:0] ram_rdata1;
    wire [15:0] ram_rdata2;
 
    wire frame_clk;
 
-   pixspi spi_m(the_actual_clock, pin_spi_clk, pin_spi_ss, pin_spi_mosi, ram_waddr, ram_wdata, ram_wclk);
-   // RAM R/W happens on clock low, and we're always reading
-   pixram ram_m(~the_actual_clock, 1, ram_wclk, ram_raddr, ram_waddr, ram_rdata1, ram_rdata2, ram_wdata);
-   // Signal advance happens on clock high
-   pixsyn syn_m(the_actual_clock, pin_hub_a, pin_hub_b, pin_hub_c, pin_hub_d, pin_hub_clk, pin_hub_lat, pin_hub_oe, ram_raddr, frame_clk);
+   // Setup SPI and data transfers.
+   wire spi_resetn;
+   wire spi_firstbyte;
+   wire spi_done;
 
+   spi_slave spi(clock, spi_resetn, pin_spi_clk, pin_spi_mosi, pin_spi_cs, ram_wdata, spi_firstbyte, spi_done);
+
+   reg [13:0] spi_byte_count = 0;
+   always @(posedge clock) begin
+      if (spi_firstbyte)
+        spi_byte_count <= 0;
+
+      if (spi_done)
+        spi_byte_count <= spi_byte_count + 1;
+   end
+
+   // RAM: Magic.
+   /*
+   wire ram_rdata [31:0];
+   assign ram_rdata[15:0] = ram_rdata1;
+   assign ram_rdata[31:16] = ram_rdata2;
+   */
+
+   pixram ram(clock, 1, spi_done, ram_raddr, spi_byte_count, {ram_rdata1, ram_rdata2}, ram_wdata);
+
+   // Signal advance happens on clock high
+   pixsyn syn_m(clock, pin_hub_a, pin_hub_b, pin_hub_c, pin_hub_d, pin_hub_clk, pin_hub_lat, pin_hub_oe, ram_raddr, frame_clk);
+
+   // 5 bit PWM.
    reg [4:0] frame_count;
    always @(posedge frame_clk) begin
     frame_count <= frame_count + 1;

@@ -32,6 +32,10 @@ prog-ice: $(PROJ).bin
 %.bin: %.asc
 	icepack $< $@
 
+# Generative targets
+src/pll.v:
+	icepll -i 16 -o 64 -m -f $@
+
 # Timing analysis.
 %.rpt: %.asc
 	icetime -d $(DEVICE) -mtr $@ $<
