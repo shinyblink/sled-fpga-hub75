@@ -42,5 +42,5 @@ src/pll.v:
 
 # Clean
 clean:
-	rm -f $(PROJ).bin $(PROJ).asc $(PROJ).rpt $(PROJ).blif
-	rm -f targets/BX.bin
+	rm -f $(PROJ).bin
+	rm -f targets/*.bin targets/*.asc targets/*.blif targets/*.rpt

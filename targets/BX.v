@@ -13,31 +13,32 @@
 
 `include "../src/pll.v"
 `include "../src/pixram.v"
+`include "../src/pixmapper.v"
 `include "../src/spi.v"
 `include "../src/pixsyn.v"
 
 module TinyFPGA_BX
-	(
-	 output pin_usbp,
-	 output pin_usbn,
-	 input pin_clk,
-	 input pin_1,
-	 input pin_2,
-	 input pin_3,
-	 output pin_11,
-	 output pin_12,
-	 output pin_13,
-	 output pin_14,
-	 output pin_15,
-	 output pin_16,
-	 output pin_17,
-	 output pin_18,
-	 output pin_19,
-	 output pin_20,
-	 output pin_21,
-	 output pin_22,
-	 output pin_23
-	 );
+  (
+   output pin_usbp,
+   output pin_usbn,
+   input pin_clk,
+   input pin_1,
+   input pin_2,
+   input pin_3,
+   output pin_11,
+   output pin_12,
+   output pin_13,
+   output pin_14,
+   output pin_15,
+   output pin_16,
+   output pin_17,
+   output pin_18,
+   output pin_19,
+   output pin_20,
+   output pin_21,
+   output pin_22,
+   output pin_23
+   );
 
    assign pin_usbp = 1'b0;
    assign pin_usbn = 1'b0;
@@ -116,8 +117,12 @@ module TinyFPGA_BX
 
    pixram ram(clock, 1, spi_done, ram_raddr, spi_byte_count, {ram_rdata1, ram_rdata2}, ram_wdata);
 
+   // Map pixel position to ram addresses.
+   wire [11:0] pixel;
+   pixmapper mapper(pixel, ram_raddr);
+
    // Signal advance happens on clock high
-   pixsyn syn_m(clock, pin_hub_a, pin_hub_b, pin_hub_c, pin_hub_d, pin_hub_clk, pin_hub_lat, pin_hub_oe, ram_raddr, frame_clk);
+   pixsyn syn_m(clock, pin_hub_a, pin_hub_b, pin_hub_c, pin_hub_d, pin_hub_clk, pin_hub_lat, pin_hub_oe, pixel, frame_clk);
 
    // 5 bit PWM.
    reg [4:0] frame_count;
