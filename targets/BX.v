@@ -53,8 +53,8 @@ module TinyFPGA_BX
 
    // Pins, input
    wire pin_spi_clk = pin_1;
-   wire pin_spi_cs = pin_2;
-   wire pin_spi_mosi = pin_3;
+   wire pin_spi_cs = pin_3;
+   wire pin_spi_mosi = pin_2;
    // Pins, output
    wire pin_hub_clk;
    wire pin_hub_lat;

@@ -16,8 +16,8 @@ BX: targets/BX.rpt targets/BX.bin
 	cp targets/BX.bin $(PROJ).bin
 
 # Programming rules
-prog-tinyprog: $(PROJ).bin
-	tinyprog --program $<
+prog-bx: $(PROJ).bin
+	tinyprog -d 1209:2100 --program $<
 
 prog-ice: $(PROJ).bin
 	iceprog $<
